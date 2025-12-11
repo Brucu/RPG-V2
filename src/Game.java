@@ -14,8 +14,8 @@ public class Game {
 
     public Game() {
         // 1. Inicjalizacja świata i gracza
-        world = new World(15, 10);
-        player = new Player("Bohater", 2, 2, 100);
+        world = new World("level.txt");
+        player = new Player("Bohater", 1, 1, 100);
 
         // 2. Inicjalizacja wrogów
         enemies = new ArrayList<>();

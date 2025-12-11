@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
@@ -6,13 +9,38 @@ public class World {
     private int width;
     private int height;
 
-    public World(int width, int height) {
-        this.width = width;
-        this.height = height;
+    public World(String fileName) {
+        try {
+            loadLevel(fileName);
+        } catch (IOException e) {
+            System.out.println("BŁĄD KRYTYCZNY: Nie znaleziono pliku mapy" + fileName);
+            System.out.println("Generuje mapę awaryjną...");
+            this.width = 10;
+            this.height = 10;
+            this.tiles = new char[width][height];
+            generateArena(); // awaryjny kwadrat
+        }
+    }
+
+    private void loadLevel(String fileName) throws IOException {
+        // Czytamy wszystkie linie z pliku do listy
+        List<String> lines = Files.readAllLines(Paths.get(fileName));
+
+        this.height  = lines.size();
+        this.width  = lines.get(0).length();
         this.tiles = new char[height][width];
 
-        generateArena(); // <--- TO JEST KLUCZOWE! Bez tego mapa jest pusta.
-        generateLoot(5); // <--- Generujemy 5 losowych przedmiotów
+        for (int y = 0; y < height; y++) {
+            String line = lines.get(y);
+            for (int x = 0; x < width; x++) {
+                if (x < line.length()) {
+                    tiles[y][x] = line.charAt(x);
+                } else {
+                    tiles[y][x] = '.';
+                }
+            }
+        }
+
     }
 
     private void generateArena() {
@@ -23,21 +51,6 @@ public class World {
                 } else {
                     tiles[y][x] = '.';
                 }
-            }
-        }
-    }
-
-    private void generateLoot(int count) {
-        Random rand = new Random();
-        for (int i = 0; i < count; i++) {
-            int x = rand.nextInt(width-2) + 1;
-            int y = rand.nextInt(height-2) + 1;
-
-            // Losujemy 50% szans na Złoto ($), 50% na Miksture (+)
-            if (rand.nextBoolean()) {
-                tiles[y][x] = '$';
-            } else {
-                tiles[y][x] = '+';
             }
         }
     }
