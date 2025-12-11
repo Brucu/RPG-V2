@@ -80,8 +80,26 @@ public class Game {
         int newX = player.getX() + dx;
         int newY = player.getY() + dy;
 
-        // A. Sprawdzamy ściany
+        // 1. Sprawdzamy co leży na ziemi
         char tile = world.getTile(newX, newY);
+
+        if (tile == '$') {
+            System.out.println(">> Znalazłeś Złoto! (+10 XP)");
+            player.gainExp(10); // Złoto daje trochę XP (lub stwórz pole 'gold' w Playerze)
+            world.removeItem(newX, newY); // Usuwamy $ z mapy
+            // Nie robimy return, bo chcemy wejść na to pole!
+        } else if (tile == '+') {
+            if (player.getHp() < player.getMaxHp()) {
+                System.out.println(">> Wypijasz Miksture! (+20 HP)");
+
+                player.setHp(player.getHp() + 20);
+
+                world.removeItem(newX, newY);
+            } else {
+                System.out.println(">> Masz pełne zdrowie, nie potrzebujesz mikstury");
+            }
+        }
+
         if (tile == '#') {
             System.out.println(">> Bum! Ściana.");
             try { Thread.sleep(500); } catch (Exception e) {} // Mała pauza na przeczytanie

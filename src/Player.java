@@ -21,6 +21,16 @@ public class Player extends Entity {
         }
     }
 
+    public void setHp(int hp) {
+        if (hp > maxHp) {
+            this.hp = maxHp;
+        } else if (hp < 0) {
+            this.hp = 0;
+        } else  {
+            this.hp = hp;
+        }
+    }
+
     private void levelUp() {
         this.level++;
         this.exp = 0; // Resetujemy pasek

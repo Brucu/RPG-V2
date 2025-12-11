@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Random;
 
 public class World {
     private char[][] tiles;
@@ -11,6 +12,7 @@ public class World {
         this.tiles = new char[height][width];
 
         generateArena(); // <--- TO JEST KLUCZOWE! Bez tego mapa jest pusta.
+        generateLoot(5); // <--- Generujemy 5 losowych przedmiotów
     }
 
     private void generateArena() {
@@ -21,6 +23,21 @@ public class World {
                 } else {
                     tiles[y][x] = '.';
                 }
+            }
+        }
+    }
+
+    private void generateLoot(int count) {
+        Random rand = new Random();
+        for (int i = 0; i < count; i++) {
+            int x = rand.nextInt(width-2) + 1;
+            int y = rand.nextInt(height-2) + 1;
+
+            // Losujemy 50% szans na Złoto ($), 50% na Miksture (+)
+            if (rand.nextBoolean()) {
+                tiles[y][x] = '$';
+            } else {
+                tiles[y][x] = '+';
             }
         }
     }
@@ -51,11 +68,26 @@ public class World {
                 else {
                     char tile = tiles[y][x];
                     // Jeśli masz tam jakieś specjalne znaki, to tutaj je podmieniamy przy wyświetlaniu
-                    System.out.print((tile == '#' ? "# " : ". "));
+                    if (tile == '#') {
+                        System.out.print("# ");
+                    }
+                    else if (tile == '$') {
+                        System.out.print("$ ");
+                    }
+                    else if (tile == '+') {
+                        System.out.print("+ ");
+                    }
+                    else {
+                        System.out.print(". ");
+                    }
                 }
             }
             System.out.println();
         }
+    }
+
+    public void removeItem(int x, int y) {
+        tiles[y][x] = '.';
     }
 
     private boolean isEnemyAt(int x, int y, List<Enemy> enemies) {
