@@ -1,45 +1,60 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Game {
-    // Obiekty naszej gry
     private World world;
     private Player player;
-    private Enemy enemy;
-    private CombatSystem combatSystem;
+    private List<Enemy> enemies; // Lista wrogów
 
-    // Narzędzia
     private Scanner scanner;
+    private CombatSystem combatSystem;
     private boolean isRunning;
 
-    // Konstruktor - tu przegotowujemy gre (resetujemy stan)
     public Game() {
-        world = new World(12,8);
+        // 1. Inicjalizacja świata i gracza
+        world = new World(15, 10);
         player = new Player("Bohater", 2, 2, 100);
-        enemy = new Enemy("Goblin", 6, 4, 50, 100);
-        combatSystem = new CombatSystem();
 
+        // 2. Inicjalizacja wrogów
+        enemies = new ArrayList<>();
+        spawnEnemies(5); // Tworzymy 3 wrogów
+
+        // 3. Narzędzia
         scanner = new Scanner(System.in);
+        combatSystem = new CombatSystem();
         isRunning = true;
     }
 
-    // Główna pętla gry (Game loop)
+    // Metoda pomocnicza do losowania wrogów
+    private void spawnEnemies(int count) {
+        Random rand = new Random();
+        for (int i = 0; i < count; i++) {
+            // Losujemy pozycję (unikając ścian na krawędziach)
+            int ex = rand.nextInt(13) + 1;
+            int ey = rand.nextInt(8) + 1;
+            enemies.add(new Enemy("Goblin " + (i+1), ex, ey, 40, 10));
+        }
+    }
+
     public void start() {
         System.out.println("Witaj w RPG v2.0!");
 
         while (isRunning) {
-            // 1. Rysuj
-            // Opcjonalnie wyczyść ekran (możesz dodac tu kod ANSI jeśli chcesz)
-            world.print(player, enemy);
+            // 1. Rysowanie
+            world.print(player, enemies);
             System.out.println(player.getStats());
 
-            // 2. Pobierz ruch
-            System.out.print("Ruch (WSAD) lub Q(WYJŚCIE): ");
-            char input  = scanner.next().toLowerCase().charAt(0);
+            // 2. Pobieranie ruchu
+            System.out.print("Ruch (WASD) lub Q(wyjście): ");
+            // Pobieramy znak i zamieniamy na małą literę
+            char input = scanner.next().toLowerCase().charAt(0);
 
-            // 3. Aktualizuj (Logika)
+            // 3. Logika
             handleInput(input);
         }
-        System.out.print("Koniec gry");
+        System.out.println("Koniec gry.");
     }
 
     private void handleInput(char cmd) {
@@ -47,14 +62,17 @@ public class Game {
         int dy = 0;
 
         switch (cmd) {
-            case 'w': dy = -1; break;
-            case 's': dy = 1; break;
-            case 'a': dx = -1; break;
-            case 'd': dx = 1; break;
+            case 'w': dy = -1; break; // Góra
+            case 's': dy = 1; break;  // Dół
+            case 'a': dx = -1; break; // Lewo
+            case 'd': dx = 1; break;  // Prawo
             case 'q': isRunning = false; return;
             default:
-                System.out.println("Nieznana komenda");;
+                System.out.println("Nieznana komenda! Użyj W, A, S, D.");
+                return;
         }
+
+        // Próba wykonania ruchu
         tryMove(dx, dy);
     }
 
@@ -62,28 +80,38 @@ public class Game {
         int newX = player.getX() + dx;
         int newY = player.getY() + dy;
 
-        // Pytamy Świat: "Co jest na polu, na które chcę wejść?"
+        // A. Sprawdzamy ściany
         char tile = world.getTile(newX, newY);
-
         if (tile == '#') {
-            System.out.println("Bum! Sciana.");
-        }else if (enemy != null && newX == enemy.getX() && newY == enemy.getY()) {
-            // Uruchamiamy walke
-            boolean won = combatSystem.startBattle(player, enemy);
-
-            if (won) {
-                enemy = null; // USUWAMY WROGRA (znika z mapy)
-                // Możemy wejść na pole, na którym stał
-            } else {
-                // Jeśli zgineliśmy lub uciekliśmy
-                if(player.getHp() <= 0) {
-                    isRunning = false; // Koniec gry
-                }
-            }
-        } else {
-            // Droga wolna - ruszamy się
-            player.move(dx, dy);
+            System.out.println(">> Bum! Ściana.");
+            try { Thread.sleep(500); } catch (Exception e) {} // Mała pauza na przeczytanie
+            return; // Blokujemy ruch
         }
 
+        // B. Sprawdzamy wrogów (czy wchodzimy na jakiegoś?)
+        Enemy target = null;
+        for (Enemy e : enemies) {
+            if (e.getX() == newX && e.getY() == newY) {
+                target = e;
+                break;
+            }
+        }
+
+        if (target != null) {
+            // -- WALKA --
+            boolean won = combatSystem.startBattle(player, target);
+            if (won) {
+                enemies.remove(target); // Usuwamy wroga z listy
+                if (enemies.isEmpty()) {
+                    System.out.println(">>> WYGRAŁEŚ! OCZYŚCIŁEŚ POZIOM! <<<");
+                    isRunning = false;
+                }
+            } else {
+                if (player.getHp() <= 0) isRunning = false;
+            }
+        } else {
+            // -- RUCH (To tutaj pewnie brakowało kodu wcześniej) --
+            player.move(dx, dy);
+        }
     }
 }

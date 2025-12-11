@@ -29,9 +29,11 @@ public class Player extends Entity {
         this.maxHp += 50;
         this.hp = this.maxHp;
 
+        System.out.println("========================");
         System.out.println("!!! LEVEL UP !!!");
         System.out.println("Jesteś teraz na poziomie " + level);
         System.out.println("Twoje Max HP wzrosło do " + maxHp);
+        System.out.println("========================");
     }
 
     @Override
